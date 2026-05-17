@@ -1,0 +1,21 @@
+Nguyên nhân khiến các ứng dụng client không thể phân tích cú pháp dữ liệu từ Web Service getHotProducts() là do phương thức này đang trả về dữ liệu dưới dạng String thông qua câu lệnh:
+
+return products.toString();
+
+Mặc dù danh sách products đã chứa các đối tượng Product, nhưng phương thức toString() không tạo ra dữ liệu JSON hợp lệ. Thay vào đó, Java chỉ chuyển danh sách object thành chuỗi văn bản thông thường. Vì class Product không override phương thức toString(), nên kết quả trả về thường có dạng như:
+
+[ProductController$Product@1ab23cd, ProductController$Product@5fd67aa]
+
+Đây không phải là định dạng JSON mà các ứng dụng frontend hoặc mobile mong đợi. Các client thường cần dữ liệu có cấu trúc JSON như:
+
+[
+  {
+    "id": "HP001",
+    "name": "Áo thun 'Code is Life'",
+    "price": 199000
+  }
+]
+
+Do dữ liệu trả về chỉ là chuỗi text không có cấu trúc JSON hợp lệ nên client không thể parse dữ liệu, dẫn đến lỗi đọc dữ liệu hoặc nhận phản hồi rỗng.
+
+Nguyên nhân gốc rễ của vấn đề là lập trình viên đã tự chuyển danh sách object sang String bằng toString() thay vì trả về trực tiếp List<Product>. Khi sử dụng @RestController, Spring Boot có khả năng tự động chuyển đổi object Java thành JSON thông qua thư viện Jackson. Tuy nhiên, cơ chế này chỉ hoạt động khi phương thức trả về object hoặc collection object, không phải chuỗi String.
